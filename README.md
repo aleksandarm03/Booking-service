@@ -181,6 +181,10 @@ curl -X POST http://localhost:8080/api/bookings \
 - bookings-service: `http://localhost:8082/h2-console` (JDBC: `jdbc:h2:mem:bookingsdb`)
   - Username: `sa`, Password: prazno
 
+### Swagger / OpenAPI
+- user-service Swagger UI: `http://localhost:8081/swagger-ui/index.html`
+- bookings-service Swagger UI: `http://localhost:8082/swagger-ui/index.html`
+
 ---
 
 ## Kako radi otpornost (Resilience4j)
