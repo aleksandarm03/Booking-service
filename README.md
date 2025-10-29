@@ -214,3 +214,39 @@ curl -X POST http://localhost:8080/api/bookings \
 - WebSocket notifikacije statusa rezervacije
 
 
+---
+
+## Bonus funkcionalnosti (dodato)
+
+- RabbitMQ događaj posle kreiranja rezervacije
+  - Nakon uspešnog `POST /api/bookings`, `bookings-service` šalje poruku na Topic Exchange `booking.events` sa routing key `booking.created`.
+  - RabbitMQ Management: `http://localhost:15672` (user: `guest`, pass: `guest`).
+
+- WebSocket/STOMP notifikacije
+  - `bookings-service` objavljuje poruku na destinaciji `/topic/bookings` nakon kreiranja rezervacije.
+  - STOMP endpoint: `/ws` (dostupan i SockJS fallback).
+  - Minimalni primer klijenta (JS):
+    ```html
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <script>
+      const socket = new SockJS('http://localhost:8082/ws');
+      const stomp = Stomp.over(socket);
+      stomp.connect({}, () => {
+        stomp.subscribe('/topic/bookings', (msg) => console.log('Booking event:', msg.body));
+      });
+    </script>
+    ```
+
+- Docker Compose okruženje
+  - U root-u postoji `docker-compose.yml` i Dockerfile-ovi po modulima.
+  - Pokretanje:
+    ```bash
+    # build JAR-ova
+    ./mvnw -q -DskipTests package
+    # start okruženja
+    docker compose up --build
+    ```
+  - Servisi: Gateway `8080`, Eureka `8761`, Users `8081`, Bookings `8082`, RabbitMQ `5672` (mgmt `15672`).
+
+

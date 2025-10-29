@@ -1,0 +1,52 @@
+version: '3.9'
+services:
+  eureka:
+    build: ./service-discovery
+    container_name: eureka
+    ports:
+      - "8761:8761"
+
+  user-service:
+    build: ./user-service
+    container_name: user-service
+    environment:
+      - EUREKA_CLIENT_SERVICE-URL_DEFAULTZONE=http://eureka:8761/eureka/
+      - SPRING_DATASOURCE_URL=jdbc:h2:mem:usersdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    depends_on:
+      - eureka
+    ports:
+      - "8081:8081"
+
+  bookings-service:
+    build: ./bookings-service
+    container_name: bookings-service
+    environment:
+      - EUREKA_CLIENT_SERVICE-URL_DEFAULTZONE=http://eureka:8761/eureka/
+      - SPRING_DATASOURCE_URL=jdbc:h2:mem:bookingsdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+      - SPRING_RABBITMQ_HOST=rabbitmq
+    depends_on:
+      - eureka
+      - rabbitmq
+    ports:
+      - "8082:8082"
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    environment:
+      - EUREKA_CLIENT_SERVICE-URL_DEFAULTZONE=http://eureka:8761/eureka/
+      - GATEWAY_API-KEY=dev-key
+    depends_on:
+      - eureka
+      - user-service
+      - bookings-service
+    ports:
+      - "8080:8080"
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+

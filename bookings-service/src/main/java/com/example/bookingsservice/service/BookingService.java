@@ -3,10 +3,12 @@ package com.example.bookingsservice.service;
 import com.example.bookingsservice.client.UserClient;
 import com.example.bookingsservice.model.Booking;
 import com.example.bookingsservice.repository.BookingRepository;
+import com.example.bookingsservice.messaging.BookingEventsPublisher;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import java.util.HashMap;
 import java.util.List;
@@ -18,10 +20,14 @@ public class BookingService {
 
     private final BookingRepository bookingRepository;
     private final UserClient userClient;
+    private final BookingEventsPublisher bookingEventsPublisher;
+    private final SimpMessagingTemplate messagingTemplate;
 
-    public BookingService(BookingRepository bookingRepository, UserClient userClient) {
+    public BookingService(BookingRepository bookingRepository, UserClient userClient, BookingEventsPublisher bookingEventsPublisher, SimpMessagingTemplate messagingTemplate) {
         this.bookingRepository = bookingRepository;
         this.userClient = userClient;
+        this.bookingEventsPublisher = bookingEventsPublisher;
+        this.messagingTemplate = messagingTemplate;
     }
 
     public List<Booking> findAll() {
@@ -42,7 +48,15 @@ public class BookingService {
         }
         // Validate user exists via Feign
         userClient.getUserById(booking.getUserId());
-        return bookingRepository.save(booking);
+        Booking saved = bookingRepository.save(booking);
+        // Publish event and websocket notification
+        try {
+            bookingEventsPublisher.publishBookingCreated(saved);
+        } catch (Exception ignored) {}
+        try {
+            messagingTemplate.convertAndSend("/topic/bookings", saved);
+        } catch (Exception ignored) {}
+        return saved;
     }
 
     @Transactional
