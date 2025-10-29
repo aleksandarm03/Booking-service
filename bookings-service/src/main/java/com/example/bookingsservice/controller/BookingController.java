@@ -26,7 +26,7 @@ public class BookingController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Booking> get(@PathVariable Long id) {
+    public ResponseEntity<Booking> get(@PathVariable("id") Long id) {
         return bookingService.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -39,20 +39,20 @@ public class BookingController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Booking> update(@PathVariable Long id, @Valid @RequestBody Booking booking) {
+    public ResponseEntity<Booking> update(@PathVariable("id") Long id, @Valid @RequestBody Booking booking) {
         return bookingService.update(id, booking)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable("id") Long id) {
         boolean removed = bookingService.delete(id);
         return removed ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
 
     @GetMapping("/{id}/details")
-    public ResponseEntity<Map<String, Object>> details(@PathVariable Long id) {
+    public ResponseEntity<Map<String, Object>> details(@PathVariable("id") Long id) {
         Map<String, Object> details = bookingService.getDetails(id);
         if (details == null) {
             return ResponseEntity.notFound().build();
