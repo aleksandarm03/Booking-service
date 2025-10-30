@@ -249,4 +249,28 @@ curl -X POST http://localhost:8080/api/bookings \
     ```
   - Servisi: Gateway `8080`, Eureka `8761`, Users `8081`, Bookings `8082`, RabbitMQ `5672` (mgmt `15672`).
 
+---
+
+## **Dijagram komponenti sistema (PlantUML)**
+
+```plantuml
+@startuml
+actor Klijent as User
+User -> Gateway : REST API pozivi (X-API-KEY)
+Gateway --> Eureka : Service discovery
+Gateway -> UserService : /api/users/**  (rute preko Eureke)
+Gateway -> BookingsService : /api/bookings/**
+BookingsService -> Eureka : Service discovery
+BookingsService -> UserService : Feign poziv (provera korisnika)
+BookingsService -> RabbitMQ : BookingCreated event (AMQP)
+BookingsService -> WebSocket : Notifikacija (/topic/bookings)
+
+component "Eureka Server" as Eureka #Yellow
+component "API Gateway" as Gateway #Orange
+component "User-service" as UserService #LightBlue
+component "Bookings-service" as BookingsService #LightGreen
+component "RabbitMQ" as RabbitMQ #Pink
+component "WebSocket endpoint" as WebSocket #LightYellow
+@enduml
+
 
