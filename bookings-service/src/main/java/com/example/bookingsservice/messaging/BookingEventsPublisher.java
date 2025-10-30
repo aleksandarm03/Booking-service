@@ -11,9 +11,9 @@ public class BookingEventsPublisher {
     private final RabbitTemplate rabbitTemplate;
     private final TopicExchange topicExchange;
 
-    public BookingEventsPublisher(RabbitTemplate rabbitTemplate) {
+    public BookingEventsPublisher(RabbitTemplate rabbitTemplate, TopicExchange topicExchange) {
         this.rabbitTemplate = rabbitTemplate;
-        this.topicExchange = new TopicExchange("booking.events");
+        this.topicExchange = topicExchange;
     }
 
     public void publishBookingCreated(Booking booking) {

@@ -1,16 +1,17 @@
-version: '3.9'
 services:
   eureka:
     build: ./service-discovery
     container_name: eureka
+    restart: unless-stopped
     ports:
       - "8761:8761"
 
   user-service:
     build: ./user-service
     container_name: user-service
+    restart: unless-stopped
     environment:
-      - EUREKA_CLIENT_SERVICE-URL_DEFAULTZONE=http://eureka:8761/eureka/
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka:8761/eureka/
       - SPRING_DATASOURCE_URL=jdbc:h2:mem:usersdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
     depends_on:
       - eureka
@@ -20,8 +21,9 @@ services:
   bookings-service:
     build: ./bookings-service
     container_name: bookings-service
+    restart: unless-stopped
     environment:
-      - EUREKA_CLIENT_SERVICE-URL_DEFAULTZONE=http://eureka:8761/eureka/
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka:8761/eureka/
       - SPRING_DATASOURCE_URL=jdbc:h2:mem:bookingsdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
       - SPRING_RABBITMQ_HOST=rabbitmq
     depends_on:
@@ -33,9 +35,10 @@ services:
   api-gateway:
     build: ./api-gateway
     container_name: api-gateway
+    restart: unless-stopped
     environment:
-      - EUREKA_CLIENT_SERVICE-URL_DEFAULTZONE=http://eureka:8761/eureka/
-      - GATEWAY_API-KEY=dev-key
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka:8761/eureka/
+      - GATEWAY_API_KEY=dev-key
     depends_on:
       - eureka
       - user-service
@@ -46,7 +49,12 @@ services:
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
+    restart: unless-stopped
     ports:
       - "5672:5672"
       - "15672:15672"
-
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
